@@ -1,5 +1,5 @@
 import { getFlyClients } from "./get-fly-clients"
-import { ResourceParams } from "./util"
+import type { ResourceParams } from "./util"
 import * as pulumi from "@pulumi/pulumi"
 import { organization_details_query } from "./fly-gql/organization_details"
 
@@ -25,13 +25,15 @@ export class FlyApp extends pulumi.dynamic.Resource {
 }
 
 export const createFlyAppProvider = (config: pulumi.Config) => {
+  const fly_api_key = config.requireSecret("fly_api_key")
   const FlyAppProvider: pulumi.dynamic.ResourceProvider<
     FlyAppInputs,
     FlyAppOutputs
   > = {
     async create(inputs) {
       const { app_name, org_slug } = inputs
-      const { gqlApi, machineApi } = await getFlyClients(config)
+      console.log("Creating Fly App", { app_name, org_slug })
+      const { gqlApi, machineApi } = await getFlyClients(fly_api_key)
 
       const {
         data: { organization_details },
@@ -63,7 +65,7 @@ export const createFlyAppProvider = (config: pulumi.Config) => {
     },
 
     async delete(id, props) {
-      const { gqlApi, machineApi } = await getFlyClients(config)
+      const { gqlApi, machineApi } = await getFlyClients(fly_api_key)
       const res = await machineApi.delete(`/v1/apps/${id}`)
       if (res.status !== 200) {
         throw new Error(
@@ -73,7 +75,7 @@ export const createFlyAppProvider = (config: pulumi.Config) => {
     },
 
     async read(id, props) {
-      const { gqlApi, machineApi } = await getFlyClients(config)
+      const { gqlApi, machineApi } = await getFlyClients(fly_api_key)
       const res = await machineApi.get(`/v1/apps/${id}`)
 
       if (res.status !== 200) {
