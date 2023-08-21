@@ -68,86 +68,90 @@ export interface FlyMachineOutputs {
   app_name: string
 }
 
-export const FlyMachineProvider: pulumi.dynamic.ResourceProvider<
-  FlyMachineInputs,
-  FlyMachineOutputs
-> = {
-  async create(inputs) {
-    const { app_name, image, machine_name } = inputs
-    const { gqlApi, machineApi } = getFlyClients()
+export const createFlyMachineProvider = (config: pulumi.Config) => {
+  const fly_api_key = config.requireSecret("fly_api_key")
+  const FlyMachineProvider: pulumi.dynamic.ResourceProvider<
+    FlyMachineInputs,
+    FlyMachineOutputs
+  > = {
+    async create(inputs) {
+      const { app_name, image, machine_name } = inputs
+      const { gqlApi, machineApi } = getFlyClients(fly_api_key)
 
-    let res = await machineApi.post(`/v1/apps/${app_name}/machines`, {
-      name: machine_name,
-      config: {
-        image,
-        env: inputs.env,
-        services: inputs.services,
-        checks: inputs.checks,
-      },
-    })
-
-    const { id: machine_id, state: initial_machine_state } = res.data
-
-    return {
-      id: machine_id,
-      outs: {
-        machine_id,
-        app_name,
-        private_ip: res.data.private_ip,
-      },
-    }
-  },
-
-  async update(id, olds, news) {
-    const { machineApi } = getFlyClients()
-    const { image } = news
-    const res = await machineApi.post(
-      `/v1/apps/${news.app_name}/machines/${olds.machine_id}`,
-      {
+      let res = await machineApi.post(`/v1/apps/${app_name}/machines`, {
+        name: machine_name,
         config: {
           image,
-          env: news.env,
-          services: news.services,
-          checks: news.checks,
+          env: inputs.env,
+          services: inputs.services,
+          checks: inputs.checks,
+        },
+      })
+
+      const { id: machine_id, state: initial_machine_state } = res.data
+
+      return {
+        id: machine_id,
+        outs: {
+          machine_id,
+          app_name,
+          private_ip: res.data.private_ip,
         },
       }
-    )
+    },
 
-    if (res.status !== 200) {
-      throw new Error(
-        `Error updating machine: ${JSON.stringify(res.data, null, "  ")}`
+    async update(id, olds, news) {
+      const { machineApi } = getFlyClients(fly_api_key)
+      const { image } = news
+      const res = await machineApi.post(
+        `/v1/apps/${news.app_name}/machines/${olds.machine_id}`,
+        {
+          config: {
+            image,
+            env: news.env,
+            services: news.services,
+            checks: news.checks,
+          },
+        }
       )
-    }
 
-    return {
-      id,
-      outs: {
-        machine_id: olds.machine_id,
-        app_name: olds.app_name,
-        private_ip: res.data.private_ip,
-      },
-    }
-  },
+      if (res.status !== 200) {
+        throw new Error(
+          `Error updating machine: ${JSON.stringify(res.data, null, "  ")}`
+        )
+      }
 
-  async delete(id, props) {
-    const { machineApi } = getFlyClients()
-    const res = await machineApi.delete(
-      `/v1/apps/${props.app_name}/machines/${props.machine_id}?force=true`
-    )
-    if (!res.data.ok) {
-      throw new Error(
-        `Error deleting machine: ${JSON.stringify(res.data, null, "  ")}`
+      return {
+        id,
+        outs: {
+          machine_id: olds.machine_id,
+          app_name: olds.app_name,
+          private_ip: res.data.private_ip,
+        },
+      }
+    },
+
+    async delete(id, props) {
+      const { machineApi } = getFlyClients(fly_api_key)
+      const res = await machineApi.delete(
+        `/v1/apps/${props.app_name}/machines/${props.machine_id}?force=true`
       )
-    }
-  },
+      if (!res.data.ok) {
+        throw new Error(
+          `Error deleting machine: ${JSON.stringify(res.data, null, "  ")}`
+        )
+      }
+    },
+  }
+  return FlyMachineProvider
 }
 
 export class FlyMachine extends pulumi.dynamic.Resource {
   constructor(
     name: string,
     props: ResourceParams<FlyMachineInputs>,
-    opts?: pulumi.CustomResourceOptions
+    opts: pulumi.CustomResourceOptions & { config: pulumi.Config }
   ) {
-    super(FlyMachineProvider, name, props, opts)
+    super(createFlyMachineProvider(opts.config), name, props, opts)
   }
 }

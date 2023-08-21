@@ -13,7 +13,7 @@ export interface FlyAppOutputs {
 }
 
 export class FlyApp extends pulumi.dynamic.Resource {
-  public readonly app_name?: pulumi.Output<string>
+  public readonly app_name: pulumi.Output<string>
 
   constructor(
     name: string,
@@ -21,6 +21,7 @@ export class FlyApp extends pulumi.dynamic.Resource {
     opts: pulumi.CustomResourceOptions & { config: pulumi.Config }
   ) {
     super(createFlyAppProvider(opts.config), name, props, opts)
+    this.app_name = pulumi.output(props.app_name)
   }
 }
 
@@ -32,7 +33,6 @@ export const createFlyAppProvider = (config: pulumi.Config) => {
   > = {
     async create(inputs) {
       const { app_name, org_slug } = inputs
-      console.log("Creating Fly App", { app_name, org_slug })
       const { gqlApi, machineApi } = await getFlyClients(fly_api_key)
 
       const {

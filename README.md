@@ -10,17 +10,28 @@ until there is an official and well-maintained fly.io pulumi provider.
 `npm add pulumi-fly`
 
 ```ts
+import { Config } from "@pulumi/pulumi"
 import { FlyApp, FlyIp, FlyMachine, flyRegistry } from "pulumi-fly"
 
-const fly_app = new FlyApp("my-app", {
-  app_name: "my_app",
-  org_slug: "my_org",
-})
+const config = new Config()
 
-const fly_ip = new FlyIp("public-ip-v6", {
-  app_name: fly_app.app_name!,
-  type: "v6",
-})
+const fly_app = new FlyApp(
+  "my-app",
+  {
+    app_name: "my_app",
+    org_slug: "my_org",
+  },
+  { config }
+)
+
+const fly_ip = new FlyIp(
+  "public-ip-v6",
+  {
+    app_name: fly_app.app_name!,
+    type: "v6",
+  },
+  { config }
+)
 
 export const ip = fly_ip.ip_address
 
@@ -33,22 +44,26 @@ const image = new docker.Image("my_app-image", {
   registry: flyRegistry,
 })
 
-const fly_machine = new FlyMachine("fly-machine-1", {
-  app_name: fly_app.app_name!,
-  image: image.repoDigest as any,
-  services: [
-    {
-      internal_port: 3070,
-      protocol: "tcp",
-      ports: [
-        {
-          handlers: ["http"],
-          port: 80,
-        },
-      ],
-    },
-  ],
-})
+const fly_machine = new FlyMachine(
+  "fly-machine-1",
+  {
+    app_name: fly_app.app_name!,
+    image: image.repoDigest as any,
+    services: [
+      {
+        internal_port: 3070,
+        protocol: "tcp",
+        ports: [
+          {
+            handlers: ["http"],
+            port: 80,
+          },
+        ],
+      },
+    ],
+  },
+  { config }
+)
 ```
 
 You are required to provide a secret, pulumi will tell you when you try to
