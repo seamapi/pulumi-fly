@@ -42,8 +42,6 @@ export const FlyIpProvider: pulumi.dynamic.ResourceProvider<
 
     const { ipAddress } = res.data.data.allocateIpAddress
 
-    console.log("allocated ip", res.data.data)
-
     return {
       id: ipAddress.id,
       outs: {

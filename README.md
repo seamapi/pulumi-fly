@@ -52,4 +52,8 @@ const fly_machine = new FlyMachine("fly-machine-1", {
 ```
 
 You are required to provide a secret, pulumi will tell you when you try to
-run but the secret is `fly_api_token`.
+run but the secret is `fly:fly_api_token`.
+
+```bash
+pulumi config set --secret fly:fly_api_key $(fly auth token)
+```
