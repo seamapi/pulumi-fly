@@ -47,8 +47,8 @@ const image = new docker.Image("my_app-image", {
 const fly_machine = new FlyMachine(
   "fly-machine-1",
   {
-    app_name: fly_app.app_name!,
-    image: image.repoDigest as any,
+    app_name: fly_app.app_name,
+    image: image.repoDigest,
     services: [
       {
         internal_port: 3070,
