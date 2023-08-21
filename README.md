@@ -27,7 +27,7 @@ const fly_app = new FlyApp(
 const fly_ip = new FlyIp(
   "public-ip-v6",
   {
-    app_name: fly_app.app_name!,
+    app_name: fly_app.app_name,
     type: "v6",
   },
   { config }
