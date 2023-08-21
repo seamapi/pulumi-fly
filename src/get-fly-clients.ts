@@ -1,10 +1,10 @@
 import * as pulumi from "@pulumi/pulumi"
 import default_axios from "axios"
 
-const config = new pulumi.Config("fly")
-export const fly_api_key = config.requireSecret("fly_api_key")
+export const getFlyClients = (config?: pulumi.Config) => {
+  if (!config) config = new pulumi.Config()
+  const fly_api_key = config.requireSecret("fly_api_key")
 
-export const getFlyClients = () => {
   const machineApi = default_axios.create({
     baseURL: "https://api.machines.dev",
     headers: {

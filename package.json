@@ -1,11 +1,11 @@
 {
   "name": "pulumi-fly",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "",
   "module": "dist/index.js",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc --outDir dist"
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",

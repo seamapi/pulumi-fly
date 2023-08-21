@@ -1,7 +1,7 @@
-import { fly_api_key } from "./get-fly-clients"
+import * as pulumi from "@pulumi/pulumi"
 
-export const flyRegistry = {
+export const getFlyRegistry = (config: pulumi.Config) => ({
   hostName: "registry.fly.io",
   userName: "x",
-  password: fly_api_key,
-}
+  password: config.requireSecret("fly_api_key"),
+})
