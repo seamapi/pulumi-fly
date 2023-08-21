@@ -11,7 +11,7 @@ until there is an official and well-maintained fly.io pulumi provider.
 
 ```ts
 import { Config } from "@pulumi/pulumi"
-import { FlyApp, FlyIp, FlyMachine, flyRegistry } from "pulumi-fly"
+import { FlyApp, FlyIp, FlyMachine, getFlyRegistry } from "pulumi-fly"
 
 const config = new Config()
 
@@ -41,7 +41,7 @@ const image = new docker.Image("my_app-image", {
     platform: "linux/amd64",
     context: "../",
   },
-  registry: flyRegistry,
+  registry: getFlyRegistry(config),
 })
 
 const fly_machine = new FlyMachine(
