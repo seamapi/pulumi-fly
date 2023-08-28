@@ -20,8 +20,15 @@ export class FlyApp extends pulumi.dynamic.Resource {
     props: ResourceParams<FlyAppInputs>,
     opts: pulumi.CustomResourceOptions & { config: pulumi.Config }
   ) {
-    super(createFlyAppProvider(opts.config), name, props, opts)
-    this.app_name = pulumi.output(props.app_name)
+    super(
+      createFlyAppProvider(opts.config),
+      name,
+      {
+        app_name: undefined,
+        ...props,
+      },
+      opts
+    )
   }
 }
 
