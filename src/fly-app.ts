@@ -9,11 +9,12 @@ export interface FlyAppInputs {
 }
 
 export interface FlyAppOutputs {
-  app_name: string
+  created_app_name: string
 }
 
 export class FlyApp extends pulumi.dynamic.Resource {
   public readonly app_name: pulumi.Output<string>
+  public readonly created_app_name: pulumi.Output<string>
 
   constructor(
     name: string,
@@ -25,6 +26,7 @@ export class FlyApp extends pulumi.dynamic.Resource {
       name,
       {
         app_name: undefined,
+        created_app_name: undefined,
         ...props,
       },
       opts
@@ -66,7 +68,7 @@ export const createFlyAppProvider = (config: pulumi.Config) => {
       return {
         id: res.data.name,
         outs: {
-          app_name: res.data.name,
+          created_app_name: res.data.name,
         },
       }
     },
@@ -92,7 +94,7 @@ export const createFlyAppProvider = (config: pulumi.Config) => {
       return {
         id: res.data.name,
         outs: {
-          app_name: res.data.name,
+          created_app_name: res.data.name,
         },
       }
     },
