@@ -1,6 +1,6 @@
 {
   "name": "pulumi-fly",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "",
   "repository": "git@github.com:seamapi/pulumi-fly",
   "module": "dist/index.js",
