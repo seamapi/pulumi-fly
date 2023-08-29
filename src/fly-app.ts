@@ -2,6 +2,7 @@ import { getFlyClients } from "./get-fly-clients"
 import type { ResourceParams } from "./util"
 import * as pulumi from "@pulumi/pulumi"
 import { organization_details_query } from "./fly-gql/organization_details"
+import type { FlyConfigProps } from "./fly-config-props"
 
 export interface FlyAppInputs {
   app_name: string
@@ -19,10 +20,10 @@ export class FlyApp extends pulumi.dynamic.Resource {
   constructor(
     name: string,
     props: ResourceParams<FlyAppInputs>,
-    opts: pulumi.CustomResourceOptions & { config: pulumi.Config }
+    opts: pulumi.CustomResourceOptions & FlyConfigProps
   ) {
     super(
-      createFlyAppProvider(opts.config),
+      createFlyAppProvider(opts),
       name,
       {
         app_name: undefined,
@@ -34,15 +35,14 @@ export class FlyApp extends pulumi.dynamic.Resource {
   }
 }
 
-export const createFlyAppProvider = (config: pulumi.Config) => {
-  const fly_api_key = config.requireSecret("fly_api_key")
+export const createFlyAppProvider = (config: FlyConfigProps) => {
   const FlyAppProvider: pulumi.dynamic.ResourceProvider<
     FlyAppInputs,
     FlyAppOutputs
   > = {
     async create(inputs) {
       const { app_name, org_slug } = inputs
-      const { gqlApi, machineApi } = await getFlyClients(fly_api_key)
+      const { gqlApi, machineApi } = await getFlyClients(config.fly_auth_token)
 
       const {
         data: { organization_details },
@@ -74,7 +74,7 @@ export const createFlyAppProvider = (config: pulumi.Config) => {
     },
 
     async delete(id, props) {
-      const { gqlApi, machineApi } = await getFlyClients(fly_api_key)
+      const { gqlApi, machineApi } = await getFlyClients(config.fly_auth_token)
       const res = await machineApi.delete(`/v1/apps/${id}`)
       if (res.status !== 200) {
         throw new Error(
@@ -84,7 +84,7 @@ export const createFlyAppProvider = (config: pulumi.Config) => {
     },
 
     async read(id, props) {
-      const { gqlApi, machineApi } = await getFlyClients(fly_api_key)
+      const { gqlApi, machineApi } = await getFlyClients(config.fly_auth_token)
       const res = await machineApi.get(`/v1/apps/${id}`)
 
       if (res.status !== 200) {

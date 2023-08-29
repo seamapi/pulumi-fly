@@ -1,7 +1,10 @@
-import * as pulumi from "@pulumi/pulumi"
+import { FlyConfigProps } from "./fly-config-props"
 
-export const getFlyRegistry = (config: pulumi.Config) => ({
+export const getFlyRegistry = (config: FlyConfigProps) => ({
   hostName: "registry.fly.io",
   userName: "x",
-  password: config.requireSecret("fly_api_key"),
+  password:
+    typeof config.fly_auth_token === "string"
+      ? config.fly_auth_token
+      : config.fly_auth_token.get(),
 })

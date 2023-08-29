@@ -3,6 +3,7 @@ import { ResourceParams } from "./util"
 import * as pulumi from "@pulumi/pulumi"
 import { allocate_ip_query } from "./fly-gql/allocate_ip"
 import { release_ip_query } from "./fly-gql/release_ip"
+import { FlyConfigProps } from "./fly-config-props"
 
 export interface FlyIpInputs {
   app_name: string
@@ -17,14 +18,13 @@ export interface FlyIpOutputs {
   app_name: string
 }
 
-export const createFlyIpProvider = (config: pulumi.Config) => {
-  const fly_api_key = config.requireSecret("fly_api_key")
+export const createFlyIpProvider = (config: FlyConfigProps) => {
   const FlyIpProvider: pulumi.dynamic.ResourceProvider<
     FlyIpInputs,
     FlyIpOutputs
   > = {
     create: async (inputs) => {
-      const { gqlApi, machineApi } = await getFlyClients(fly_api_key)
+      const { gqlApi, machineApi } = await getFlyClients(config.fly_auth_token)
 
       let res = await gqlApi.post("/", {
         query: allocate_ip_query,
@@ -59,7 +59,7 @@ export const createFlyIpProvider = (config: pulumi.Config) => {
       throw new Error("Didn't implement v4 & v6")
     },
     async delete(id, props) {
-      const { gqlApi, machineApi } = await getFlyClients(fly_api_key)
+      const { gqlApi, machineApi } = await getFlyClients(config.fly_auth_token)
 
       const res = await gqlApi.post("/", {
         query: release_ip_query,
@@ -92,10 +92,10 @@ export class FlyIp extends pulumi.dynamic.Resource {
   constructor(
     name: string,
     props: ResourceParams<FlyIpInputs>,
-    opts: pulumi.CustomResourceOptions & { config: pulumi.Config }
+    opts: pulumi.CustomResourceOptions & FlyConfigProps
   ) {
     super(
-      createFlyIpProvider(opts.config),
+      createFlyIpProvider(opts),
       name,
       {
         ip_address: undefined,

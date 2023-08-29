@@ -1,6 +1,7 @@
 import * as pulumi from "@pulumi/pulumi"
 import { ResourceParams } from "./util"
 import { getFlyClients } from "./get-fly-clients"
+import { FlyConfigProps } from "./fly-config-props"
 
 export interface FlyMachineInputs {
   app_name: string
@@ -68,15 +69,14 @@ export interface FlyMachineOutputs {
   app_name: string
 }
 
-export const createFlyMachineProvider = (config: pulumi.Config) => {
-  const fly_api_key = config.requireSecret("fly_api_key")
+export const createFlyMachineProvider = (config: FlyConfigProps) => {
   const FlyMachineProvider: pulumi.dynamic.ResourceProvider<
     FlyMachineInputs,
     FlyMachineOutputs
   > = {
     async create(inputs) {
       const { app_name, image, machine_name } = inputs
-      const { gqlApi, machineApi } = getFlyClients(fly_api_key)
+      const { gqlApi, machineApi } = getFlyClients(config.fly_auth_token)
 
       let res = await machineApi.post(`/v1/apps/${app_name}/machines`, {
         name: machine_name,
@@ -101,7 +101,7 @@ export const createFlyMachineProvider = (config: pulumi.Config) => {
     },
 
     async update(id, olds, news) {
-      const { machineApi } = getFlyClients(fly_api_key)
+      const { machineApi } = getFlyClients(config.fly_auth_token)
       const { image } = news
       const res = await machineApi.post(
         `/v1/apps/${news.app_name}/machines/${olds.machine_id}`,
@@ -132,7 +132,7 @@ export const createFlyMachineProvider = (config: pulumi.Config) => {
     },
 
     async delete(id, props) {
-      const { machineApi } = getFlyClients(fly_api_key)
+      const { machineApi } = getFlyClients(config.fly_auth_token)
       const res = await machineApi.delete(
         `/v1/apps/${props.app_name}/machines/${props.machine_id}?force=true`
       )
@@ -150,8 +150,8 @@ export class FlyMachine extends pulumi.dynamic.Resource {
   constructor(
     name: string,
     props: ResourceParams<FlyMachineInputs>,
-    opts: pulumi.CustomResourceOptions & { config: pulumi.Config }
+    opts: pulumi.CustomResourceOptions & FlyConfigProps
   ) {
-    super(createFlyMachineProvider(opts.config), name, props, opts)
+    super(createFlyMachineProvider(opts), name, props, opts)
   }
 }
